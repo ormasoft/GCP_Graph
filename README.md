@@ -270,7 +270,7 @@ Build and run:
 The C++ version includes:
 
 -   JSON parsing (`json.hpp`)
--   Debug graph printing
+-   Debug graph printing (need to take previous commit of that file)
 -   Example queries using `test.json`
 
 ------------------------------------------------------------------------
