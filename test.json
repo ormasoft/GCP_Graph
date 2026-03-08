@@ -1,0 +1,63 @@
+[
+  {
+    "name": "//cloudresourcemanager.googleapis.com/organizations/1066060271767",
+    "asset_type": "cloudresourcemanager.googleapis.com/Organization",
+    "iam_policy": {
+      "bindings": [
+        {
+          "role": "roles/resourcemanager.organizationAdmin",
+          "members": ["user:itay@test.authomize.com"]
+        },
+        {
+          "role": "roles/viewer",
+          "members": ["group:all-employees@test.authomize.com"]
+        }
+      ]
+    },
+    "ancestors": ["organizations/1066060271767"]
+  },
+  {
+    "name": "//cloudresourcemanager.googleapis.com/folders/188906894377",
+    "display_name": "Engineering-Dept",
+    "asset_type": "cloudresourcemanager.googleapis.com/Folder",
+    "iam_policy": {
+      "bindings": [
+        {
+          "role": "roles/resourcemanager.folderAdmin",
+          "members": ["user:ron@test.authomize.com"]
+        }
+      ]
+    },
+    "ancestors": ["folders/188906894377", "organizations/1066060271767"]
+  },
+  {
+    "name": "//cloudresourcemanager.googleapis.com/folders/767216091627",
+    "display_name": "DevOps-Subfolder",
+    "asset_type": "cloudresourcemanager.googleapis.com/Folder",
+    "iam_policy": {
+      "bindings": [
+        {
+          "role": "roles/owner",
+          "members": [
+            "serviceAccount:terraform-runner@infra-pjt.iam.gserviceaccount.com",
+            "user:maya@test.authomize.com"
+          ]
+        }
+      ]
+    },
+    "ancestors": ["folders/767216091627", "folders/188906894377", "organizations/1066060271767"]
+  },
+  {
+    "name": "//cloudresourcemanager.googleapis.com/projects/production-data-99",
+    "asset_type": "cloudresourcemanager.googleapis.com/Project",
+    "iam_policy": {
+      "bindings": [
+        {
+          "role": "roles/bigquery.dataViewer",
+          "members": ["user:dana@test.authomize.com"]
+        }
+      ]
+    },
+    "ancestors": ["projects/production-data-99", "folders/767216091627", "folders/188906894377", "organizations/1066060271767"]
+  }
+]
