@@ -1,3 +1,157 @@
+"""
+Assignment: GCP Permissions Graph
+
+The task is to analyze access permissions in a Google Cloud–like hierarchy.
+
+The system contains:
+- Resources (Organization, Folder, Project)
+- Identities (Users, Groups, Service Accounts)
+
+Resources form a hierarchy:
+Organization -> Folder -> Project.
+
+Identities can receive roles on resources, and roles are inherited down
+the hierarchy. Groups may also contain users.
+
+Graph model
+-----------
+The data is represented as a directed graph.
+
+Node types:
+- RESOURCE: a cloud resource (organization, folder, project)
+- IDENTITY: a user, group, or service account
+
+Edge types:
+- POINTER_TO_PARENT : resource -> parent resource
+- HAS_ROLE          : identity -> resource (metadata = role name)
+- MEMBER_OF         : identity -> group
+
+Definitions
+-----------
+Asset
+    A cloud resource (Organization / Folder / Project).
+
+Metadata
+    Extra information attached to an edge.
+
+    In the current implementation:
+    - HAS_ROLE edge:
+        metadata = role name
+        examples: roles/viewer, roles/editor, roles/owner
+    - POINTER_TO_PARENT edge:
+        metadata is currently empty
+    - MEMBER_OF edge:
+        metadata is currently empty
+
+Design choices
+--------------
+The graph keeps:
+- nodes     : a list of all nodes
+- edges     : a list of all edges
+- id_to_node: a map for direct lookup by node id, allowing O(1) average access
+
+The list containers match the assignment structure.
+The map is used for efficient access by id.
+Traversal itself is done through adjacency lists stored on each node:
+- out_edges (used to find parent resources in Task 2 and Task 4, and to find role assignments from identities to resources)
+- in_edges  (used to find which identities which HAS_ROLE on a resource in Task 4)
+
+Implementation summary
+----------------------
+The solution builds a directed graph of resources and identities.
+
+Resources are connected to their parent resource.
+Identities are connected to resources through HAS_ROLE assignments.
+If group membership exists, identities may also connect to groups.
+
+Queries are implemented using simple graph traversals.
+(See Graph model example below)
+
+
+Task 2
+------
+Goal:
+    Return the hierarchy of a given resource.
+
+Input:
+    graph, resource_id
+
+Output:
+    A list of ancestor resource ids, starting from the direct parent and continuing up to the root.
+
+How it works:
+    Follow POINTER_TO_PARENT edges upward until there is no parent.
+
+Complexity:
+    O(h), where h is the hierarchy depth.
+
+
+Task 3
+------
+Goal:
+    Return the effective permissions of a given identity.
+
+Input:
+    graph, user_id
+
+Output:
+    A list of tuples:
+        (resource_id, asset_type, role)
+
+Meaning:
+    Each tuple describes one resource the identity can access, the type of that resource, and the effective role on it.
+
+How it works:
+    1. Collect roles assigned directly to the user.
+    2. Also collect roles assigned through group membership.
+    3. For each assigned role, propagate it down the resource hierarchy to all descendant resources.
+
+Complexity:
+    O(R + D) in the reachable subgraph,
+    where R is the number of direct role/group edges inspected, and D is the number
+    of descendant hierarchy edges visited.
+
+Task 4
+------
+Goal:
+    Return all identities that have access to a given resource.
+
+Input:
+    graph, resource_id
+
+Output:
+    A list of tuples:
+        (identity_id, role)
+
+Meaning:
+    Each tuple describes an identity that has access to the resource and the role by which the access is granted.
+
+How it works:
+    1. Start from the resource.
+    2. Walk up the hierarchy to all ancestor resources.
+    3. On each resource in that path, collect incoming HAS_ROLE edges.
+
+Complexity:
+    O(h + a), where h is the hierarchy depth and a is the number of role-assignment edges inspected along that path.
+
+Graph model example:
+--------------------
+
+  Identity -> Resource role assignment
+  -----------------------------------
+  user:alice@test.com --HAS_ROLE--> folders/100   (metadata = "roles/editor")
+
+  Resource hierarchy
+  ------------------
+  projects/200 --POINTER_TO_PARENT--> folders/100
+  folders/100 --POINTER_TO_PARENT--> organizations/1
+
+  Group membership
+  ----------------
+  user:bob@test.com --MEMBER_OF--> group:admins@test.com
+  group:admins@test.com --HAS_ROLE--> organizations/1
+"""
+
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import Dict, List, Optional, Tuple
